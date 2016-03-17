@@ -19,7 +19,7 @@ data = sorted(Counter(isodates).items())
 l = range(len(data))
 skip = int(max(len(l) / 20, 1))
 
-print(max([(point[1], point[0]) for point in data]))
+print("Max: {0}".format(max([(point[1], point[0]) for point in data])))
 
 plt.bar(l, [item[1] for item in data], align='center')
 plt.xticks(l[::skip], [item[0] for item in data[::skip]], rotation=70)
