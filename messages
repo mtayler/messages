@@ -1,4 +1,3 @@
 #!/usr/local/bin/bash
-rm -f message_dates.dat
 ./get-messages $@
 python plot-messages.py
