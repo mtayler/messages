@@ -1,3 +1,49 @@
-#!/usr/local/bin/bash
-./get-messages $@
-python plot-messages.py
+HELP_STRING="get-messages help:
+Usage: get-messages [[-x] <iMessage account>]
+
+\t-x:\t\t\tExclude specified iMessage account
+\t<iMessage account>:\tThe iMessage account to act on
+
+If no arguments are specified, all messages will be pulled\n"
+
+excluding=0
+
+while getopts x,h opt; do
+	case $opt in
+	 x)
+		echo "Setting excluding"
+		excluding=1
+		shift $((OPTIND-1))
+		;;
+	 h)
+	 	printf "$HELP_STRING"
+		shift $((OPTIND-1))
+		exit 1
+		;;
+	 \?)
+		echo "-$opt invalid argument"
+		exit
+		;;
+	esac
+done
+#Parameter is a iMessage account (email or phone number i.e. +33616.... )
+if [ -z "$1" ]; then
+	echo "Getting all"
+	sqlite3 ~/Library/Messages/chat.db "SELECT date FROM message" > message_dates.dat
+elif [ $excluding = 1 ]; then
+	echo "Getting all but $1"
+	sqlite3 ~/Library/Messages/chat.db "
+		SELECT date FROM message WHERE handle_id<>(
+		SELECT handle_id FROM chat_handle_join WHERE chat_id=(
+		SELECT ROWID FROM chat WHERE chat_identifier='$1'
+	))" > message_dates.dat
+else
+	echo "Getting $1"
+	sqlite3 ~/Library/Messages/chat.db "
+		SELECT date FROM message WHERE handle_id=(
+		SELECT handle_id FROM chat_handle_join WHERE chat_id=(
+		SELECT ROWID FROM chat WHERE chat_identifier='$1'
+	))" > message_dates.dat
+fi
+
+/usr/bin/env python plot-messages.py
